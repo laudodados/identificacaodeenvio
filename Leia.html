@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etiqueta de Remessa - Sodramar</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --dark-blue: #0b1d3a;
+            --border-color: #ddd;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+
+        /* TELA 1: FORMULÁRIO DE PREENCHIMENTO */
+        #tela-formulario {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-sizing: border-box; /* Garante que o padding não quebre a largura */
+        }
+        #tela-formulario h2 {
+            color: var(--dark-blue);
+            margin-top: 0;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .form-group input[type="text"], .form-group input[type="date"], .form-group textarea {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group textarea { resize: vertical; }
+        .radio-group { display: flex; gap: 15px; margin-top: 5px; }
+
+        .btn-gerar {
+            width: 100%;
+            background-color: var(--dark-blue);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* TELA 2: ETIQUETA PRONTA */
+        #tela-etiqueta {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #etiqueta-container {
+            width: 100%;
+            max-width: 800px;
+            background: #fff;
+            border: 1px solid #000;
+            box-sizing: border-box;
+        }
+
+        /* Cabeçalho */
+        .header {
+            background-color: var(--dark-blue);
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            text-transform: uppercase;
+        }
+        .header h1, .header h2 { margin: 0; font-size: 18px; }
+        .header h2 { font-weight: normal; margin-top: 5px; }
+
+        /* Linhas e Células da Etiqueta */
+        .row {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .row:last-of-type { border-bottom: none; }
+        
+        .col {
+            flex: 1;
+            padding: 10px;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+        .col:last-child { border-right: none; }
+
+        .lbl-titulo {
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .dado-etiqueta {
+            font-size: 14px;
+            color: #000;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        /* Seção de Garantia na Etiqueta */
+        .garantia-container {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            gap: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .garantia-label {
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            width: 150px;
+        }
+        .box-garantia {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            border: 1px solid #ccc;
+            background-color: #fcfcfc;
+            gap: 10px;
+            color: #999;
+        }
+        .radio-fake {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            display: inline-block;
+        }
+        
+        .box-garantia.ativa-dentro {
+            border-color: #28a745; background-color: #e9f5ec; color: #1e7e34; font-weight: bold;
+        }
+        .box-garantia.ativa-dentro .radio-fake { border-color: #28a745; background-color: #28a745; }
+        
+        .box-garantia.ativa-fora {
+            border-color: #dc3545; background-color: #f8e5e7; color: #bd2130; font-weight: bold;
+        }
+        .box-garantia.ativa-fora .radio-fake { border-color: #dc3545; background-color: #dc3545; }
+
+        /* Rodapé Destinatário */
+        .footer-destinatario {
+            background-color: var(--dark-blue);
+            color: #fff;
+            padding: 10px;
+            font-size: 13px;
+        }
+        .footer-destinatario b { font-size: 14px; }
+
+        /* Botões de Ação da Etiqueta */
+        .actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        button:hover { opacity: 0.8; }
+        .btn-print { background-color: #0275d8; }
+        .btn-share { background-color: #25d366; }
+        .btn-voltar { background-color: #6c757d; }
+
+        /* REGRAS DE IMPRESSÃO IMPORTANTES */
+        @media print {
+            body { 
+                background: white; 
+                padding: 0; 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            .actions, #tela-formulario { display: none !important; }
+            #tela-etiqueta { display: flex !important; }
+            #etiqueta-container { border: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <form id="tela-formulario" onsubmit="gerarEtiqueta(event)">
+        <h2>Dados da Remessa</h2>
+        
+        <div class="form-group">
+            <label>Nome do Remetente</label>
+            <input type="text" id="in-nome" placeholder="Digite o nome completo" required>
+        </div>
+        <div class="form-group">
+            <label>Endereço do Remetente</label>
+            <input type="text" id="in-endereco" placeholder="Rua, Número, Bairro, Cidade - Estado" required>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <div class="form-group" style="flex: 1;">
+                <label>Protocolo / ID Atendimento</label>
+                <input type="text" id="in-protocolo" placeholder="Ex: 123456" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>No. Agendamento</label>
+                <input type="text" id="in-agendamento" placeholder="Ex: 7890" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Data de Envio</label>
+            <input type="date" id="in-data" required>
+        </div>
+        <div class="form-group">
+            <label>Produto Enviado</label>
+            <input type="text" id="in-produto" placeholder="Nome do produto" required>
+        </div>
+        <div class="form-group">
+            <label>Defeito Relatado</label>
+            <textarea id="in-defeito" placeholder="Descreva o defeito com detalhes..." rows="4" required></textarea>
+        </div>
+        <div class="form-group">
+            <label>Situação de Garantia</label>
+            <div class="radio-group">
+                <label><input type="radio" name="in-garantia" value="dentro" checked> Dentro da Garantia</label>
+                <label><input type="radio" name="in-garantia" value="fora"> Fora da Garantia</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-gerar">Gerar Etiqueta</button>
+    </form>
+
+    <div id="tela-etiqueta">
+        <div id="etiqueta-container">
+            <div class="header">
+                <h1>Sodramar Assistência Técnica</h1>
+                <h2>Remessa para Conserto</h2>
+            </div>
+
+            <div class="row">
+                <div class="col" style="flex: 1.5;">
+                    <div class="lbl-titulo">Nome do Remetente</div>
+                    <div id="out-nome" class="dado-etiqueta"></div>
+                </div>
+                <div class="col" style="flex: 2;">
+                    <div class="lbl-titulo">Endereço do Remetente</div>
+                    <div id="out-endereco" class="dado-etiqueta"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="lbl-titulo">Protocolo / ID Atendimento</div>
+                    <div id="out-protocolo" class="dado-etiqueta"></div>
+                </div>
+                <div class="col">
+                    <div class="lbl-titulo">No. Agendamento</div>
+                    <div id="out-agendamento" class="dado-etiqueta"></div>
+                </div>
+                <div class="col">
+                    <div class="lbl-titulo">Data de Envio</div>
+                    <div id="out-data" class="dado-etiqueta"></div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <div class="lbl-titulo">Produto Enviado</div>
+                    <div id="out-produto" class="dado-etiqueta"></div>
+                </div>
+                <div class="col">
+                    <div class="lbl-titulo">Defeito Relatado</div>
+                    <div id="out-defeito" class="dado-etiqueta"></div>
+                </div>
+            </div>
+
+            <div class="garantia-container">
+                <div class="garantia-label">Situação de<br>Garantia</div>
+                
+                <div id="box-dentro" class="box-garantia">
+                    <span class="radio-fake"></span> Dentro da Garantia
+                </div>
+
+                <div id="box-fora" class="box-garantia">
+                    <span class="radio-fake"></span> Fora da Garantia
+                </div>
+            </div>
+
+            <div class="footer-destinatario">
+                DESTINATÁRIO: <b>SODRAMAR</b><br>
+                R. Caramuru, 925 - Conceição | Diadema - SP | CEP 09911-510
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-voltar" onclick="voltarFormulario()">⬅️ Voltar e Editar</button>
+            <button class="btn-print" onclick="window.print()">🖨️ Imprimir Etiqueta</button>
+            <button class="btn-share" onclick="compartilharPDF()">🔗 Compartilhar (WhatsApp/Email)</button>
+        </div>
+    </div>
+
+    <script>
+        // Função agora recebe o evento de submissão do formulário
+        function gerarEtiqueta(event) {
+            event.preventDefault(); // Impede o recarregamento da página ao clicar no botão
+
+            // Pega os valores do formulário
+            document.getElementById('out-nome').innerText = document.getElementById('in-nome').value;
+            document.getElementById('out-endereco').innerText = document.getElementById('in-endereco').value;
+            document.getElementById('out-protocolo').innerText = document.getElementById('in-protocolo').value;
+            document.getElementById('out-agendamento').innerText = document.getElementById('in-agendamento').value;
+            document.getElementById('out-produto').innerText = document.getElementById('in-produto').value;
+            document.getElementById('out-defeito').innerText = document.getElementById('in-defeito').value;
+
+            // Formata a data (de YYYY-MM-DD para DD/MM/YYYY)
+            const dataInput = document.getElementById('in-data').value;
+            if(dataInput) {
+                const [ano, mes, dia] = dataInput.split('-');
+                document.getElementById('out-data').innerText = `${dia}/${mes}/${ano}`;
+            }
+
+            // Lógica para destacar o box de garantia correto
+            const garantia = document.querySelector('input[name="in-garantia"]:checked').value;
+            const boxDentro = document.getElementById('box-dentro');
+            const boxFora = document.getElementById('box-fora');
+            
+            // Reseta as classes
+            boxDentro.className = 'box-garantia';
+            boxFora.className = 'box-garantia';
+
+            if(garantia === 'dentro') {
+                boxDentro.classList.add('ativa-dentro');
+            } else {
+                boxFora.classList.add('ativa-fora');
+            }
+
+            // Esconde formulário, mostra etiqueta
+            document.getElementById('tela-formulario').style.display = 'none';
+            document.getElementById('tela-etiqueta').style.display = 'flex';
+        }
+
+        function voltarFormulario() {
+            // Esconde etiqueta, mostra formulário
+            document.getElementById('tela-etiqueta').style.display = 'none';
+            document.getElementById('tela-formulario').style.display = 'block';
+        }
+
+        // Configurações para gerar o arquivo a ser compartilhado
+        const pdfOptions = {
+            margin:       0.5,
+            filename:     'Etiqueta_Sodramar.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        async function compartilharPDF() {
+            const element = document.getElementById('etiqueta-container');
+            
+            try {
+                // Gera o PDF ocultamente como Blob
+                const pdfBlob = await html2pdf().set(pdfOptions).from(element).output('blob');
+                const file = new File([pdfBlob], "Etiqueta_Sodramar.pdf", { type: "application/pdf" });
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Etiqueta de Conserto - Sodramar',
+                        text: 'Segue a etiqueta para envio do produto para conserto.',
+                        files: [file]
+                    });
+                } else {
+                    alert("Seu dispositivo não suporta o compartilhamento direto do PDF. Apenas a impressão está disponível.");
+                }
+            } catch (error) {
+                console.error("Erro ao tentar compartilhar:", error);
+                alert("Ocorreu um erro ao tentar compartilhar o arquivo.");
+            }
+        }
+    </script>
+
+</body>
+</html>
